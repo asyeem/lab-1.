@@ -1,0 +1,177 @@
+
+echo "System Information"
+echo "------------------"
+echo "Hostname: $(hostname)"
+source /etc/os-release
+echo "OS: $NAME $VERSION"
+echo "Uptime: $(uptime -p)"
+echo
+
+echo "Hardware Information"
+echo "--------------------"
+echo "CPU: $(lshw -C cpu | grep "product" | cut -d ':' -f 2 | sed 's/^[[:space:]]*//')"
+echo "Speed: $(lshw -C cpu | grep "clock" | cut -d ':' -f 2 | sed 's/^[[:space:]]*//')"
+echo "RAM: $(free -h | awk '/Mem:/ {print $2}')"
+echo "Disk(s):"
+lsblk -bo NAME,MODEL,SIZE | grep -v "NAME\s*MODEL\s*SIZE"
+echo "Video: $(lshw -C display | grep "product" | cut -d ':' -f 2 | sed 's/^[[:space:]]*//')"
+echo
+
+echo "Network Information"
+echo "--------------------"
+echo "FQDN: $(hostname --fqdn)"
+echo "Host Address: $(hostname -I | cut -d ' ' -f 1)"
+echo "Gateway IP: $(ip r | grep default | awk '{print $3}')"
+echo "DNS Server: $(cat /etc/resolv.conf | grep -E '^nameserver' | awk '{print $2}')"
+echo "Interfaces:"
+ip a | awk '/^[0-9]+:/ {print $2}' | cut -d ':' -f 1 | while read -r interface; do
+  interface_make_model=$(ethtool -i "$interface" | grep driver | cut -d ':' -f 2 | sed 's/^[[:space:]]*//')
+  ip_address=$(ip a show "$interface" | grep -E '\sinet\s' | awk '{print $2}')
+  echo "Interface: $interface_make_model"
+  echo "IP Address: $ip_address"
+  echo
+done
+
+echo "System Status"
+echo "--------------"
+echo "Users Logged In: $(who | cut -d ' ' -f 1 | sort | uniq | tr '\n' ',' | sed 's/,$//')"
+echo "Disk Space:"
+df -h | awk '{print $6 " " $4}' | tail -n +2
+echo "Process Count: $(ps -ef | wc -l)"
+echo "Load Averages: $(uptime | grep -ohe 'load average[s:][: ].*' | awk '{print $3,$4,$5}')"
+echo "Memory Allocation: $(free -h | awk '/Mem:/ {print $3"/"$2}')"
+echo "Listening Network Ports:"
+ss -tuln | awk 'NR>1 {print $5}' | cut -d ':' -f 2 | sort | uniq | tr '\n' ',' | sed 's/,$//'
+echo "UFW Rules:"
+sudo ufw status | awk 'NR>4 {print $1,$2,$3,$4,$5}'
+
+
+
+output
+System Information
+------------------
+Hostname: pc200507129
+OS: Ubuntu 22.04.1 LTS (Jammy Jellyfish)
+Uptime: up 3 minutes
+
+Hardware Information
+--------------------
+WARNING: you should run this program as super-user.
+WARNING: output may be incomplete or inaccurate, you should run this program as super-user.
+CPU: AMD Ryzen 7 5800H with Radeon Graphics
+WARNING: you should run this program as super-user.
+WARNING: output may be incomplete or inaccurate, you should run this program as super-user.
+Speed:
+RAM: 1.9Gi
+Disk(s):
+loop0                                      52260864
+loop1                                     107986944
+loop2                                      58314752
+loop3                                     117387264
+loop4                                     176467968
+loop5                                      58368000
+loop6                                     177451008
+loop7                                      66531328
+loop8                                      66392064
+loop9                                      55844864
+sda                       VBOX HARDDISK 21474836480
+├─sda1                                      1048576
+├─sda2                                   1902116864
+└─sda3                                  19569573888
+  └─ubuntu--vg-ubuntu--lv               10737418240
+sdb                       VBOX HARDDISK 17179869184
+├─sdb1                                      1048576
+├─sdb2                                   1879048192
+└─sdb3                                  15297675264
+sr0                       VBOX CD-ROM    1073741312
+WARNING: you should run this program as super-user.
+WARNING: output may be incomplete or inaccurate, you should run this program as super-user.
+Video: SVGA II Adapter
+
+Network Information
+--------------------
+FQDN: pc200507129
+Host Address: 10.0.2.15
+Gateway IP: 10.0.2.1
+DNS Server: 127.0.0.53
+Interfaces:
+Cannot get driver information: Operation not supported
+Interface:
+IP Address: 127.0.0.1/8
+
+Interface: e1000
+IP Address: 10.0.2.15/24
+
+Interface: e1000
+IP Address: 192.168.242.99/24
+
+Cannot get driver information: No such device
+Device "en-vl30@enp0s8" does not exist.
+Interface:
+IP Address:
+
+Cannot get driver information: No such device
+Device "en-vl10@enp0s8" does not exist.
+Interface:
+IP Address:
+
+Cannot get driver information: No such device
+Device "en-vl20@enp0s8" does not exist.
+Interface:
+IP Address:
+
+Interface: vxlan
+IP Address: 10.1.238.64/32
+
+System Status
+--------------
+Users Logged In: ubuntu
+Disk Space:
+/run 197M
+/ 0
+/dev/shm 989M
+/run/lock 5.0M
+/boot 1.4G
+/run/user/1000 198M
+/var/snap/microk8s/common/run/containerd/io.containerd.grpc.v1.cri/sandboxes/1122a7ccd51a82a5c39489f90cd5f0cd95253b78da30a12cdf87c36a9d7ca779/shm 64M
+Process Count: 143
+Load Averages: 0.69, 0.60, 0.27
+Memory Allocation: 790Mi/1.9Gi
+Listening Network Ports:
+,10248,10249,10250,10256,10257,10259,1338,16443,19001,22,25000,33917,4789,53,61209,68,9090,9099,953UFW Rules:
+[sudo] password for ubuntu:
+9090/tcp ALLOW Anywhere
+Anywhere on vxlan.calico ALLOW Anywhere
+Anywhere on cali+ ALLOW Anywhere
+22/tcp ALLOW Anywhere
+53 ALLOW Anywhere
+80/tcp ALLOW Anywhere
+443/tcp ALLOW Anywhere
+25/tcp ALLOW Anywhere
+587/tcp ALLOW Anywhere
+110/tcp ALLOW Anywhere
+143/tcp ALLOW Anywhere
+465/tcp ALLOW Anywhere
+993/tcp ALLOW Anywhere
+995/tcp ALLOW Anywhere
+9090/tcp (v6) ALLOW Anywhere (v6)
+Anywhere (v6) on vxlan.calico ALLOW
+Anywhere (v6) on cali+ ALLOW
+22/tcp (v6) ALLOW Anywhere (v6)
+53 (v6) ALLOW Anywhere (v6)
+80/tcp (v6) ALLOW Anywhere (v6)
+443/tcp (v6) ALLOW Anywhere (v6)
+25/tcp (v6) ALLOW Anywhere (v6)
+587/tcp (v6) ALLOW Anywhere (v6)
+110/tcp (v6) ALLOW Anywhere (v6)
+143/tcp (v6) ALLOW Anywhere (v6)
+465/tcp (v6) ALLOW Anywhere (v6)
+993/tcp (v6) ALLOW Anywhere (v6)
+995/tcp (v6) ALLOW Anywhere (v6)
+
+Anywhere ALLOW OUT Anywhere on
+Anywhere ALLOW OUT Anywhere on
+Anywhere (v6) ALLOW OUT Anywhere
+Anywhere (v6) ALLOW OUT Anywhere
+
+ubuntu@pc200507129:~$
